@@ -1,0 +1,24 @@
+/* Custom styles for Vulnerability Management System */
+
+.info-box-number {
+    font-weight: bold;
+}
+
+.badge {
+    font-size: 0.8em;
+}
+
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.table th {
+    border-top: none;
+}
+
+.card-tools .badge {
+    font-size: 0.9em;
+}

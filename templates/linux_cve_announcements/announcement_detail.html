@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'linux_cve_announcements:announcement-list' %}">Linux CVE Announcements</a></li>
+<li class="breadcrumb-item active">{{ announcement.subject|truncatechars:50 }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{{ announcement.subject }}</h3>
+        <div class="card-tools">
+          {% if announcement.severity == 'CRITICAL' %}
+            <span class="badge badge-danger">{{ announcement.severity }}</span>
+          {% elif announcement.severity == 'HIGH' %}
+            <span class="badge badge-warning">{{ announcement.severity }}</span>
+          {% elif announcement.severity == 'MEDIUM' %}
+            <span class="badge badge-info">{{ announcement.severity }}</span>
+          {% elif announcement.severity == 'LOW' %}
+            <span class="badge badge-secondary">{{ announcement.severity }}</span>
+          {% else %}
+            <span class="badge badge-light">{{ announcement.severity }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered">
+          <tr>
+            <th style="width: 150px;">Message ID</th>
+            <td><code>{{ announcement.message_id }}</code></td>
+          </tr>
+          <tr>
+            <th>Subject</th>
+            <td><strong>{{ announcement.subject }}</strong></td>
+          </tr>
+          <tr>
+            <th>Sender</th>
+            <td>{{ announcement.sender }}</td>
+          </tr>
+          <tr>
+            <th>Date</th>
+            <td>{{ announcement.date|date:"F d, Y H:i T" }}</td>
+          </tr>
+          <tr>
+            <th>CVE IDs</th>
+            <td>
+              {% for cve_id in announcement.cve_ids %}
+                <span class="badge badge-secondary mr-1">{{ cve_id }}</span>
+              {% empty %}
+                <span class="text-muted">None detected</span>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr>
+            <th>Components</th>
+            <td>
+              {% for component in announcement.affected_components %}
+                <span class="badge badge-info mr-1">{{ component }}</span>
+              {% empty %}
+                <span class="text-muted">None detected</span>
+              {% endfor %}
+            </td>
+          </tr>
+        </table>
+        
+        <h4>Content</h4>
+        <div class="card">
+          <div class="card-body">
+            <pre style="white-space: pre-wrap; font-family: monospace; font-size: 0.9em;">{{ announcement.content }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Actions</h3>
+      </div>
+      <div class="card-body">
+        <a href="/api/linux-cve/{{ announcement.message_id }}/" class="btn btn-info btn-block" target="_blank">
+          <i class="fas fa-code"></i> View API
+        </a>
+        <a href="http://localhost:8080/linux-cve-announce/{{ announcement.message_id }}/" class="btn btn-primary btn-block" target="_blank">
+          <i class="fas fa-external-link-alt"></i> View on lore.kernel.org
+        </a>
+      </div>
+    </div>
+    
+    <!-- Related CVEs -->
+    {% if announcement.cve_ids %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Related CVEs</h3>
+      </div>
+      <div class="card-body">
+        {% for cve_id in announcement.cve_ids %}
+        <div class="mb-2">
+          <a href="{% url 'cve_repository:cve-list' %}?search={{ cve_id }}" class="btn btn-sm btn-outline-danger btn-block text-left">
+            <i class="fas fa-bug"></i> {{ cve_id }}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Metadata -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Metadata</h3>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tr>
+            <th>Created</th>
+            <td>{{ announcement.created_at|date:"M d, Y H:i" }}</td>
+          </tr>
+          <tr>
+            <th>Updated</th>
+            <td>{{ announcement.updated_at|date:"M d, Y H:i" }}</td>
+          </tr>
+          <tr>
+            <th>Severity</th>
+            <td>{{ announcement.severity }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

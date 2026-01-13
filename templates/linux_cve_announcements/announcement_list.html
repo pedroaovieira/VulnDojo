@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Linux CVE Announcements</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Linux CVE Announcements</h3>
+      </div>
+      <div class="card-body">
+        <!-- Search and Filter Form -->
+        <form method="get" class="mb-3">
+          <div class="row">
+            <div class="col-md-4">
+              <input type="text" name="search" class="form-control" placeholder="Search subject or content..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+              <input type="text" name="sender" class="form-control" placeholder="Sender..." value="{{ sender_filter }}">
+            </div>
+            <div class="col-md-2">
+              <select name="year" class="form-control">
+                <option value="">All Years</option>
+                {% for year in years %}
+                <option value="{{ year.year }}" {% if year_filter == year.year|stringformat:"s" %}selected{% endif %}>{{ year.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+              </button>
+              <a href="{% url 'linux_cve_announcements:announcement-list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Clear
+              </a>
+            </div>
+          </div>
+        </form>
+        
+        <!-- Results -->
+        {% if page_obj %}
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Sender</th>
+                <th>Date</th>
+                <th>CVE IDs</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for announcement in page_obj %}
+              <tr>
+                <td>
+                  <a href="{% url 'linux_cve_announcements:announcement-detail' announcement.message_id %}">
+                    {{ announcement.subject|truncatechars:100 }}
+                  </a>
+                </td>
+                <td>{{ announcement.sender }}</td>
+                <td>{{ announcement.date|date:"M d, Y H:i" }}</td>
+                <td>
+                  {% for cve_id in announcement.cve_ids %}
+                    <span class="badge badge-secondary">{{ cve_id }}</span>
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+                <td>
+                  {% if announcement.severity == 'CRITICAL' %}
+                    <span class="badge badge-danger">{{ announcement.severity }}</span>
+                  {% elif announcement.severity == 'HIGH' %}
+                    <span class="badge badge-warning">{{ announcement.severity }}</span>
+                  {% elif announcement.severity == 'MEDIUM' %}
+                    <span class="badge badge-info">{{ announcement.severity }}</span>
+                  {% elif announcement.severity == 'LOW' %}
+                    <span class="badge badge-secondary">{{ announcement.severity }}</span>
+                  {% else %}
+                    <span class="badge badge-light">{{ announcement.severity }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sender_filter %}sender={{ sender_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sender_filter %}sender={{ sender_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sender_filter %}sender={{ sender_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> No announcements found.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

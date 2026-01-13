@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'cve_repository:cve-list' %}">CVE Repository</a></li>
+<li class="breadcrumb-item active">{{ cve.cve_id }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{{ cve.cve_id }}</h3>
+        <div class="card-tools">
+          {% if cve.severity == 'CRITICAL' %}
+            <span class="badge badge-danger">{{ cve.severity }}</span>
+          {% elif cve.severity == 'HIGH' %}
+            <span class="badge badge-warning">{{ cve.severity }}</span>
+          {% elif cve.severity == 'MEDIUM' %}
+            <span class="badge badge-info">{{ cve.severity }}</span>
+          {% elif cve.severity == 'LOW' %}
+            <span class="badge badge-secondary">{{ cve.severity }}</span>
+          {% else %}
+            <span class="badge badge-light">{{ cve.severity }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered">
+          <tr>
+            <th style="width: 200px;">CVE ID</th>
+            <td><strong>{{ cve.cve_id }}</strong></td>
+          </tr>
+          <tr>
+            <th>Source Identifier</th>
+            <td>{{ cve.source_identifier|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Status</th>
+            <td>{{ cve.vuln_status|default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>Published</th>
+            <td>{{ cve.published|date:"F d, Y H:i T" }}</td>
+          </tr>
+          <tr>
+            <th>Last Modified</th>
+            <td>{{ cve.last_modified|date:"F d, Y H:i T" }}</td>
+          </tr>
+        </table>
+        
+        <h4>Description</h4>
+        <div class="alert alert-light">
+          {{ cve.description }}
+        </div>
+      </div>
+    </div>
+    
+    <!-- CVSS Metrics -->
+    {% if cve.cvss_metrics.all %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">CVSS Metrics</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Version</th>
+                <th>Vector String</th>
+                <th>Base Score</th>
+                <th>Severity</th>
+                <th>Exploitability</th>
+                <th>Impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for metric in cve.cvss_metrics.all %}
+              <tr>
+                <td>{{ metric.source }}</td>
+                <td>{{ metric.cvss_version }}</td>
+                <td><code>{{ metric.vector_string }}</code></td>
+                <td><strong>{{ metric.base_score }}</strong></td>
+                <td>
+                  {% if metric.base_severity == 'CRITICAL' %}
+                    <span class="badge badge-danger">{{ metric.base_severity }}</span>
+                  {% elif metric.base_severity == 'HIGH' %}
+                    <span class="badge badge-warning">{{ metric.base_severity }}</span>
+                  {% elif metric.base_severity == 'MEDIUM' %}
+                    <span class="badge badge-info">{{ metric.base_severity }}</span>
+                  {% elif metric.base_severity == 'LOW' %}
+                    <span class="badge badge-secondary">{{ metric.base_severity }}</span>
+                  {% else %}
+                    <span class="badge badge-light">{{ metric.base_severity }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ metric.exploitability_score|default:"-" }}</td>
+                <td>{{ metric.impact_score|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Weaknesses -->
+    {% if cve.weaknesses.all %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Weaknesses (CWE)</h3>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>CWE ID</th>
+                <th>Type</th>
+                <th>Source</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for weakness in cve.weaknesses.all %}
+              <tr>
+                <td><strong>{{ weakness.cwe_id }}</strong></td>
+                <td>{{ weakness.type }}</td>
+                <td>{{ weakness.source }}</td>
+                <td>{{ weakness.description|truncatechars:100 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Actions</h3>
+      </div>
+      <div class="card-body">
+        <a href="/api/cve/{{ cve.cve_id }}/" class="btn btn-info btn-block" target="_blank">
+          <i class="fas fa-code"></i> View API
+        </a>
+        <a href="https://nvd.nist.gov/vuln/detail/{{ cve.cve_id }}" class="btn btn-primary btn-block" target="_blank">
+          <i class="fas fa-external-link-alt"></i> View on NVD
+        </a>
+      </div>
+    </div>
+    
+    <!-- References -->
+    {% if cve.references.all %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">References</h3>
+      </div>
+      <div class="card-body">
+        {% for reference in cve.references.all %}
+        <div class="mb-2">
+          <a href="{{ reference.url }}" target="_blank" class="btn btn-sm btn-outline-primary btn-block text-left">
+            <i class="fas fa-link"></i> {{ reference.source|default:"External Link" }}
+          </a>
+          {% if reference.tags %}
+          <div class="mt-1">
+            {% for tag in reference.tags %}
+            <span class="badge badge-secondary">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

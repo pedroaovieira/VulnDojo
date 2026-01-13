@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'cpe_repository:cpe-list' %}">CPE Repository</a></li>
+<li class="breadcrumb-item active">{{ cpe.cpe_name|truncatechars:50 }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">CPE Details</h3>
+        <div class="card-tools">
+          {% if cpe.deprecated %}
+            <span class="badge badge-warning">Deprecated</span>
+          {% else %}
+            <span class="badge badge-success">Active</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <table class="table table-bordered">
+              <tr>
+                <th style="width: 200px;">CPE Name</th>
+                <td><code>{{ cpe.cpe_name }}</code></td>
+              </tr>
+              <tr>
+                <th>CPE Name ID</th>
+                <td><code>{{ cpe.cpe_name_id }}</code></td>
+              </tr>
+              <tr>
+                <th>Title</th>
+                <td>{{ cpe.title|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>Vendor</th>
+                <td>{{ cpe.vendor|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>Product</th>
+                <td>{{ cpe.product|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>Version</th>
+                <td>{{ cpe.version|default:"-" }}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td>
+                  {% if cpe.deprecated %}
+                    <span class="badge badge-warning">Deprecated</span>
+                  {% else %}
+                    <span class="badge badge-success">Active</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Last Modified</th>
+                <td>{{ cpe.last_modified|date:"F d, Y H:i T" }}</td>
+              </tr>
+              <tr>
+                <th>Created</th>
+                <td>{{ cpe.created_at|date:"F d, Y H:i T" }}</td>
+              </tr>
+              <tr>
+                <th>Updated</th>
+                <td>{{ cpe.updated_at|date:"F d, Y H:i T" }}</td>
+              </tr>
+            </table>
+            
+            {% if cpe.deprecated and cpe.deprecated_by %}
+            <div class="alert alert-warning">
+              <h5><i class="fas fa-exclamation-triangle"></i> Deprecated</h5>
+              <p>This CPE has been deprecated. It is replaced by:</p>
+              <ul>
+                {% for replacement in cpe.deprecated_by %}
+                <li><code>{{ replacement }}</code></li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Actions</h3>
+              </div>
+              <div class="card-body">
+                <a href="/api/cpe/{{ cpe.cpe_name_id }}/" class="btn btn-info btn-block" target="_blank">
+                  <i class="fas fa-code"></i> View API
+                </a>
+                <a href="{% url 'cpe_repository:cpe-list' %}?vendor={{ cpe.vendor }}" class="btn btn-secondary btn-block">
+                  <i class="fas fa-search"></i> More from {{ cpe.vendor }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- References -->
+        {% if cpe.references.all %}
+        <div class="mt-4">
+          <h4>References</h4>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>URL</th>
+                  <th>Text</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for reference in cpe.references.all %}
+                <tr>
+                  <td><a href="{{ reference.href }}" target="_blank">{{ reference.href }}</a></td>
+                  <td>{{ reference.text|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

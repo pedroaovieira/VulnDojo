@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Search</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Search Results</h3>
+      </div>
+      <div class="card-body">
+        {% if query %}
+          <p>Search results for: <strong>"{{ query }}"</strong></p>
+          
+          <!-- CPE Results -->
+          {% if results.cpe %}
+          <div class="mb-4">
+            <h4><i class="fas fa-shield-alt"></i> CPE Entries</h4>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CPE Name</th>
+                    <th>Title</th>
+                    <th>Vendor</th>
+                    <th>Product</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cpe in results.cpe %}
+                  <tr>
+                    <td><a href="{% url 'cpe_repository:cpe-detail' cpe.cpe_name_id %}">{{ cpe.cpe_name }}</a></td>
+                    <td>{{ cpe.title|truncatechars:100 }}</td>
+                    <td>{{ cpe.vendor }}</td>
+                    <td>{{ cpe.product }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <a href="{% url 'cpe_repository:cpe-list' %}?search={{ query }}" class="btn btn-sm btn-primary">View all CPE results</a>
+          </div>
+          {% endif %}
+          
+          <!-- CVE Results -->
+          {% if results.cve %}
+          <div class="mb-4">
+            <h4><i class="fas fa-bug"></i> CVE Entries</h4>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>CVE ID</th>
+                    <th>Description</th>
+                    <th>Published</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cve in results.cve %}
+                  <tr>
+                    <td><a href="{% url 'cve_repository:cve-detail' cve.cve_id %}">{{ cve.cve_id }}</a></td>
+                    <td>{{ cve.description|truncatechars:150 }}</td>
+                    <td>{{ cve.published|date:"M d, Y" }}</td>
+                    <td>{{ cve.vuln_status }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <a href="{% url 'cve_repository:cve-list' %}?search={{ query }}" class="btn btn-sm btn-danger">View all CVE results</a>
+          </div>
+          {% endif %}
+          
+          <!-- Linux CVE Announcements Results -->
+          {% if results.linux_cve %}
+          <div class="mb-4">
+            <h4><i class="fab fa-linux"></i> Linux CVE Announcements</h4>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Sender</th>
+                    <th>Date</th>
+                    <th>CVE IDs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for announcement in results.linux_cve %}
+                  <tr>
+                    <td><a href="{% url 'linux_cve_announcements:announcement-detail' announcement.message_id %}">{{ announcement.subject|truncatechars:100 }}</a></td>
+                    <td>{{ announcement.sender }}</td>
+                    <td>{{ announcement.date|date:"M d, Y" }}</td>
+                    <td>
+                      {% for cve_id in announcement.cve_ids %}
+                        <span class="badge badge-secondary">{{ cve_id }}</span>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <a href="{% url 'linux_cve_announcements:announcement-list' %}?search={{ query }}" class="btn btn-sm btn-success">View all announcement results</a>
+          </div>
+          {% endif %}
+          
+          {% if not results.cpe and not results.cve and not results.linux_cve %}
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No results found for "{{ query }}".
+          </div>
+          {% endif %}
+          
+        {% else %}
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> Please enter a search query.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

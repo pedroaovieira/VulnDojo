@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Info boxes -->
+<div class="row">
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box">
+      <span class="info-box-icon bg-info elevation-1"><i class="fas fa-shield-alt"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">CPE Entries</span>
+        <span class="info-box-number">{{ cpe_count|default:0 }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box mb-3">
+      <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-bug"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">CVE Entries</span>
+        <span class="info-box-number">{{ cve_count|default:0 }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box mb-3">
+      <span class="info-box-icon bg-success elevation-1"><i class="fab fa-linux"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Linux CVE Announcements</span>
+        <span class="info-box-number">{{ linux_cve_count|default:0 }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12 col-sm-6 col-md-3">
+    <div class="info-box mb-3">
+      <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-sync-alt"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">Recent Imports</span>
+        <span class="info-box-number">{{ recent_imports|length }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Imports -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Recent Import Activity</h3>
+      </div>
+      <div class="card-body">
+        {% if recent_imports %}
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Records Processed</th>
+                <th>Created</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for import_log in recent_imports %}
+              <tr>
+                <td>{{ import_log.get_import_type_display }}</td>
+                <td>
+                  {% if import_log.status == 'completed' %}
+                    <span class="badge badge-success">{{ import_log.get_status_display }}</span>
+                  {% elif import_log.status == 'failed' %}
+                    <span class="badge badge-danger">{{ import_log.get_status_display }}</span>
+                  {% elif import_log.status == 'started' %}
+                    <span class="badge badge-info">{{ import_log.get_status_display }}</span>
+                  {% else %}
+                    <span class="badge badge-warning">{{ import_log.get_status_display }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ import_log.started_at|date:"M d, Y H:i" }}</td>
+                <td>{{ import_log.completed_at|date:"M d, Y H:i"|default:"-" }}</td>
+                <td>{{ import_log.records_processed }}</td>
+                <td>{{ import_log.records_created }}</td>
+                <td>{{ import_log.records_updated }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No recent import activity.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">CPE Repository</h3>
+      </div>
+      <div class="card-body">
+        <p>Browse and search Common Platform Enumeration entries.</p>
+        <a href="{% url 'cpe_repository:cpe-list' %}" class="btn btn-primary">Browse CPE</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">CVE Repository</h3>
+      </div>
+      <div class="card-body">
+        <p>Browse and search Common Vulnerabilities and Exposures.</p>
+        <a href="{% url 'cve_repository:cve-list' %}" class="btn btn-danger">Browse CVE</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Linux CVE Announcements</h3>
+      </div>
+      <div class="card-body">
+        <p>Browse Linux kernel CVE announcements from the mailing list.</p>
+        <a href="{% url 'linux_cve_announcements:announcement-list' %}" class="btn btn-success">Browse Announcements</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+# Example cron entries for Linux
+# Add these to your crontab with: crontab -e
+
+# Update data daily at 2 AM
+0 2 * * * /path/to/your/project/venv/bin/python /path/to/your/project/scripts/update_data.py
+
+# Update CVE data every 6 hours
+0 */6 * * * /path/to/your/project/venv/bin/python /path/to/your/project/manage.py import_cve
+
+# Update CPE data weekly on Sunday at 3 AM
+0 3 * * 0 /path/to/your/project/venv/bin/python /path/to/your/project/manage.py import_cpe --full
+
+# Update Linux CVE announcements daily at 4 AM
+0 4 * * * /path/to/your/project/venv/bin/python /path/to/your/project/manage.py import_linux_cve

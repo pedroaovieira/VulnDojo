@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">CVE Repository</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">CVE Repository</h3>
+      </div>
+      <div class="card-body">
+        <!-- Search and Filter Form -->
+        <form method="get" class="mb-3">
+          <div class="row">
+            <div class="col-md-4">
+              <input type="text" name="search" class="form-control" placeholder="Search CVE ID or description..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+              <select name="severity" class="form-control">
+                <option value="">All Severities</option>
+                {% for severity in severities %}
+                <option value="{{ severity }}" {% if severity_filter == severity %}selected{% endif %}>{{ severity }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <select name="year" class="form-control">
+                <option value="">All Years</option>
+                {% for year in years %}
+                <option value="{{ year.year }}" {% if year_filter == year.year|stringformat:"s" %}selected{% endif %}>{{ year.year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+              </button>
+              <a href="{% url 'cve_repository:cve-list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Clear
+              </a>
+            </div>
+          </div>
+        </form>
+        
+        <!-- Results -->
+        {% if page_obj %}
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>CVE ID</th>
+                <th>Description</th>
+                <th>Severity</th>
+                <th>Base Score</th>
+                <th>Published</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cve in page_obj %}
+              <tr>
+                <td>
+                  <a href="{% url 'cve_repository:cve-detail' cve.cve_id %}">
+                    <strong>{{ cve.cve_id }}</strong>
+                  </a>
+                </td>
+                <td>{{ cve.description|truncatechars:150 }}</td>
+                <td>
+                  {% if cve.severity == 'CRITICAL' %}
+                    <span class="badge badge-danger">{{ cve.severity }}</span>
+                  {% elif cve.severity == 'HIGH' %}
+                    <span class="badge badge-warning">{{ cve.severity }}</span>
+                  {% elif cve.severity == 'MEDIUM' %}
+                    <span class="badge badge-info">{{ cve.severity }}</span>
+                  {% elif cve.severity == 'LOW' %}
+                    <span class="badge badge-secondary">{{ cve.severity }}</span>
+                  {% else %}
+                    <span class="badge badge-light">{{ cve.severity }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% for metric in cve.cvss_metrics.all %}
+                    {% if forloop.first %}
+                      <strong>{{ metric.base_score }}</strong>
+                    {% endif %}
+                  {% empty %}
+                    -
+                  {% endfor %}
+                </td>
+                <td>{{ cve.published|date:"M d, Y" }}</td>
+                <td>{{ cve.vuln_status|default:"-" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if severity_filter %}severity={{ severity_filter }}&{% endif %}{% if year_filter %}year={{ year_filter }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> No CVE entries found.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
